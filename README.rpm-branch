@@ -4,6 +4,7 @@ To use it:
 1: Create a throwaway branch.
 2: Merge the branches you want to test into the throwaway branch.
 3: Merge the rpm branch into the throwaway branch.
-4: Run make-rpm
-5: If all goes well, a shiny new ROM package will appear.  Install it.
+4: Run make-rpm as root.
+5: If all goes well, a shiny new RPM package will appear in the usual place.
+6: Install the shiny, candylike package.
 6: Profit!
