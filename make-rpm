@@ -6,4 +6,6 @@ sed -e "s,[@]TIMESTAMP[@],$TIMESTAMP,g" \
     -e "s,[@]GITREV[@],$GITREV,g" <pm-utils.spec.in >pm-utils.spec
 
 rpmbuild -bb pm-utils.spec
-rm pm-utils.spec
+
+# clean up after ourselves
+git clean -f -x -d
