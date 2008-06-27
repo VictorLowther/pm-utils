@@ -1,0 +1,9 @@
+#!/bin/sh
+export PM_UTILS_DIR="$(pwd)"
+export TIMESTAMP="$(git log --pretty=format:"%ct" |head -1)"
+export GITREV="$(git log --pretty=format:"%t" |head -1)"
+sed -e "s,[@]TIMESTAMP[@],$TIMESTAMP,g" \
+    -e "s,[@]GITREV[@],$GITREV,g" <pm-utils.spec.in >pm-utils.spec
+
+rpmbuild -bb pm-utils.spec
+rm pm-utils.spec

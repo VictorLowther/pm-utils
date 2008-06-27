@@ -40,38 +40,36 @@ This package contains the pkg-config files for development
 when building programs that use %{name}.
 
 %prep
-pushd "$RPM_BUILD_ROOT"
+pushd "$PM_UTILS_DIR"
 ./autogen.sh
 popd
 
 %build
-pushd "$RPM_BUILD_ROOT"
+pushd "$PM_UTILS_DIR"
 %configure
 make
 popd
 
 
 %install
-pushd "$RPM_BUILD_ROOT"
-export DESTDIR="$RPM_BUILD_ROOT/inst"
-[ -d $DESTDIR ] && rm -rf "$DESTDIR"
-mkdir -p "$DESTDIR"
+pushd "$PM_UTILS_DIR"
+export DESTDIR="$RPM_BUILD_ROOT"
 make install
 
-install -D -m 0600 /dev/null $DESTDIR%{_localstatedir}/log/pm-suspend.log
-mkdir -p $DESTDIR%{_localstatedir}/run/pm-utils/{locks,storage}
+install -D -m 0600 /dev/null $RPM_BUILD_ROOT%{_localstatedir}/log/pm-suspend.log
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/pm-utils/{locks,storage}
 
-install -D -m 0755 %{SOURCE21} $DESTDIR%{_libdir}/pm-utils/sleep.d/99hd-apm-restore.hook
-install -D -m 0644 %{SOURCE22} $DESTDIR%{_sysconfdir}/pm-utils-hd-apm-restore.conf
+install -D -m 0755 pm-utils-99hd-apm-restore $RPM_BUILD_ROOT%{_libdir}/pm-utils/sleep.d/99hd-apm-restore.hook
+install -D -m 0644 pm-utils-hd-apm-restore.conf $RPM_BUILD_ROOT%{_sysconfdir}/pm-utils-hd-apm-restore.conf
 
-install -D -m 0755 %{SOURCE23} $DESTDIR%{_bindir}/pm-utils-bugreport-info.sh
+install -D -m 0755 pm-utils-bugreport-info.sh $RPM_BUILD_ROOT%{_bindir}/pm-utils-bugreport-info.sh
 popd
 
 %clean
+rm -rf "$RPM_BUILD_ROOT"
 
 %files
 %defattr(-,root,root,-)
-%doc README COPYING AUTHORS ChangeLog
 %config(noreplace) %{_sysconfdir}/pm-utils-hd-apm-restore.conf
 %{_sysconfdir}/pm/
 %dir %{_libdir}/pm-utils/
