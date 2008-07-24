@@ -66,6 +66,7 @@ smart_kernel_intel()
 	--quirk-vbestate-restore \
 	--quirk-reset-brightness \
 	--quirk-radeon-off
+}
 
 smart_kernel_video() 
 {
@@ -75,6 +76,6 @@ smart_kernel_video()
 
 case $1 in
      suspend|hibernate)
-	smart_kernel_video
+	smart_kernel_video ;;
      *) exit 0 ;;
 esac
