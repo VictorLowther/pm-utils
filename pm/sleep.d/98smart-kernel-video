@@ -44,7 +44,6 @@ have_nvidia()
     # suspend/resume in a quirk-free manner.
     [ -d /sys/module/nvidia ] || return 1
     remove_all_video_quirks
-    add_parameters --quirk-no-chvt
 }
 
 have_fglrx()
