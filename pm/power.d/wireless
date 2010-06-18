@@ -7,6 +7,16 @@
 which iwpriv >/dev/null 2>&1 && have_iwpriv="true"
 which iwconfig >/dev/null 2>&1 && have_iwconfig="true"
 
+help() {
+cat <<EOF
+---
+$0: Enable and disable WLAN power savings for various wireless cards.
+This tool has no tuneable parameters, mainly due to the most common
+tuneables differing from card to card.
+
+EOF
+}
+
 # If only all the drivers did The Right Thing with iwconfig power.
 # Too bad they do not.
 
@@ -73,6 +83,7 @@ wireless_powersave() {
 case $1 in
     true) wireless_powersave on ;;
     false) wireless_powersave off ;;
+    help) help;;
     *) exit $NA ;;
 esac
 

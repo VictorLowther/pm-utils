@@ -6,6 +6,18 @@
 # scheduler will minimize the physical packages/cpu cores carrying the
 # load and thus conserving power
 
+help() {
+    cat <<EOF
+---
+$0: Tune scheduler for multi-core power savings.
+This hook tries to tune the schedulers to sue a few cores as possible
+when power savings is requested.  
+
+It has no tuneable parameters.
+
+EOF
+}
+
 sched_powersave() {
     for pool in mc smp smt; do
 	dev="/sys/devices/system/cpu/sched_${pool}_power_savings"

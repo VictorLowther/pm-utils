@@ -2,24 +2,53 @@
 
 . "${PM_FUNCTIONS}"
 
-command_exists ethtool || exit $NA
+help() {
+cat <<EOF
+---
+$0: Disable Wake On Lan.
+This hook disables Wake On Lan support for all wired network interfaces.
+It has no tuneable parameters.
 
-set_wol_status() {
+EOF
+}
+save_wol_status() {
+    [ -d "/sys/class/net/$1" ] || exit $NA
+    command_exists ethtool || exit $NA
+    state_exists "${0##*/}_$1" && return
+    ethtool "$1" |while IFS=':' read -r key val; do
+        [ "$key" = "Wake-on" ] || continue
+        savestate "${0##*/}_$1" "$val"
+        break
+    done
+}
+
+disable_wol() {   
+    printf "Disabling Wake On Lan for %s..." "$1"
+    save_wol_status "$1"
+    ethtool -s "$1" wol d>/dev/null 2>&1 && \
+        echo Done. || echo Failed.
+}
+
+restore_wol() {
+    printf "Restoring old Wake On Lan status for %s..." "%1"
+    if state=$(restorestate "${0##*/}_$1"); then
+        ethtool -s "$1" wol "${state}">/dev/null 2>&1 && \
+            echo Done. || echo Failed.
+    fi
+}
+
+for_each_nic() {
     for d in "/sys/class/net/"*; do
 	[ -e "$d/wireless" ] && continue
 	[ -h "$d/device/driver" ] || continue
-	printf "Setting Wake On Lan for %s to %s..." "${d##*/}" "$1"
-	case $1 in
-	    disable) ethtool -s "${d##*/}" wol d>/dev/null 2>&1;;
-	    enable) ethtool -s "${d##*/}" wol g>/dev/null 2>&1;;
-	esac
-	[ "$?" -eq 0 ] && echo Done. || echo Failed.
+        "$1" "${d##*/}"
     done
 }
 
 case $1 in
-    true) set_wol_status disable;;
-    false) set_wol_status enable;;
+    true) for_each_nic disable_wol;;
+    false) for_each_nic restore_wol;;
+    help) help;;
     *) exit $NA;;
 esac
 

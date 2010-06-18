@@ -61,7 +61,7 @@ write_values() {
     done
 }
 
-laptop_mode_ac() {
+laptop_mode_restore() {
     # disable laptop mode, set vm parameters back to sane defaults
     if state_exists laptop_mode_default; then
 	write_values $(restorestate laptop_mode_default)
@@ -71,7 +71,7 @@ laptop_mode_ac() {
     echo "Laptop mode disabled."
 }
 
-laptop_mode_battery() {
+laptop_mode_set() {
     # enable laptop mode, set vm parameters to buffer as many writes as 
     # possible.
     state_exists laptop_mode_default || \
@@ -82,8 +82,8 @@ laptop_mode_battery() {
 }
 
 case $1 in
-    true) laptop_mode_battery ;;
-    false) laptop_mode_ac ;;
+    true) laptop_mode_set ;;
+    false) laptop_mode_restore ;;
     help) help;;
     *) exit $NA ;;
 esac

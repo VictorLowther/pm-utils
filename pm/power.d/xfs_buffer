@@ -48,7 +48,7 @@ write_values() {
 # Why does XFS have its own parameters instead of just using the
 # VM subsystem ones?  Only SGI knows...
 
-xfs_ac() {
+xfs_restore_default() {
     if state_exists xfs_buffer_default; then
 	write_values $(restorestate xfs_buffer_default)
     else
@@ -56,15 +56,15 @@ xfs_ac() {
     fi
 }
 
-xfs_battery() {
+xfs_set() {
     state_exists xfs_buffer_default || \
 	read_values |savestate xfs_buffer_default
     write_values "$XFS_AGE_BUFFER" "$XFS_BUFD" "$XFS_SYNCD"
 }
 
 case $1 in
-    true) xfs_battery ;;
-    false) xfs_ac ;;
+    true) xfs_set ;;
+    false) xfs_restore_default ;;
     help) help;;
     *) exit $NA ;;
 esac
