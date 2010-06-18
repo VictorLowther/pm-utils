@@ -34,9 +34,16 @@ remove_powersave_lock() {
 help() {
     cat <<EOF
 $0: Valid options are:
-false or ac = turn powersaving features off.
-true or battery = turn powersaving features on.
-help = get detailed help.
+false or ac = Tune powersaving features for the currently selected AC profile.
+true or battery = Tune powersaving features for the currently selected 
+                  battery profile.
+<policyname> = Immediatly switch to the passed powersave policy, but do not
+               change the preferred policy for the current power state.
+--help = get detailed help.
+--(ac|battery)-policy <policy> or --(ac|battery)policy=<policy>
+   set powersave for ac or battery policy to <policy>
+--(ac|battery)-policy = show the current powersave policy
+--list-policies = show the available powersave policies.
 
 EOF
 if [ "$1" = "--help" ]; then
@@ -65,10 +72,117 @@ lock_and_load() {
     init_logfile "${PM_LOGFILE}"
 }
 
+set_policy_vars() {
+    current_powersave_policy="$PM_UTILS_RUNDIR/$STASHNAME/current_$1_policy"
+    unset powersave_polfile
+    powersave_policy=default
+    if [ -L "$current_powersave_policy" ]; then
+        powersave_polfile="$(readlink -f "$current_powersave_policy")"
+        [ -f "$powersave_polfile" ] && {
+            powersave_policy="${powersave_polfile##*/}"
+            powersave_policy="${powersave_policy%.policy}"
+        }
+    fi
+}
+
+show_policy() { echo "$powersave_policy"; }
+
+find_policy() {
+    local pol
+    for pol in "$PM_UTILS_ETCDIR/$STASHNAME/$1.policy" \
+        "$PM_UTILS_LIBDIR/$STASHNAME/$1.policy" ''; do
+        [ "$pol" -a -f "$pol" ] || continue
+    done
+    [ "$pol" ] && echo "$pol"
+}
+
+maybe_set_policy() {
+    local pol
+    if [ "$1" = "default" ]; then
+        rm -f "$current_powersave_policy"
+        return
+    elif pol="$(find_policy "$1")"; then
+        ln -sf "$pol" "$current_powersave_policy"
+        return
+    else
+        echo "Could not find policy $1, aborting."
+        exit 1
+    fi
+}
+
+load_policy() {
+    local p
+    if [ ! "$1" ]; then
+        [ -L "$current_powersave_policy" ] && . "$current_powersave_policy"
+        return 0
+    elif p="$(find_policy "$1")"; then
+        . "$p"
+    else
+        return 1
+    fi  
+}
+
+process_policy() {
+    set_policy_vars "$1"
+    shift
+    case $1 in
+        --*=*) maybe_set_policy "${1#*=}";;
+        --*) if [ "$2" ]; then
+            maybe_set_policy "$2"
+            else
+            show_policy
+            fi;;
+    esac
+}
+
+list_policies() {
+    (for pol in "$PM_UTILS_ETCDIR/$STASHNAME/"*".policy" \
+        "$PM_UTILS_LIBDIR/$STASHNAME/"*".policy"; do
+        [ -f "$pol" ] || continue
+        pol="${pol##*/}"
+        pol="${pol%.policy}"
+        echo "$pol"
+    done; echo default;) |sort |uniq
+}
+
+do_battery() {
+    lock_and_load
+    set_policy_vars battery
+    load_policy
+    run_hooks power true
+}
+
+do_ac() {
+    lock_and_load
+    set_policy_vars ac
+    if [ "$powersave_policy" != "default" ]; then
+        load_policy
+        run_hooks power true
+    else
+        run_hooks power false
+    fi
+}
+
 case $1 in
-    true|battery) lock_and_load && run_hooks power true;;
-    false|ac) lock_and_load && run_hooks power false;;
+    true|battery) do_battery;; 
+    false|ac) do_ac;;
     --help) help && run_hooks power help;;
-    '') lock_and_load; on_ac_power && run_hooks power false || run_hooks power true;;
+    --ac-policy*) process_policy ac "$@";;
+    --batt-policy*) process_policy battery "$@";;
+    --list-policies) list_policies;;
+    default) lock_and_load
+        if on_ac_power; then
+            run_hooks power false
+        else
+            run_hooks power true
+        fi;;
+    '') if load_policy "$1"; then
+        lock_and_load
+        run_hooks power true
+        elif on_ac_power; then
+        do_ac
+        else
+        do_battery
+        fi;;
     *) help && exit 1;;
 esac
