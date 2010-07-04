@@ -1,13 +1,5 @@
 pm-util now handles the video quirk database outside of HAL.
 
-On systems that have not made the transition away from HAL, you must run
-
-import-fdi-quirkdb
-
-as root before attempting to suspend or hibernate the system.  If your system
-no longer uses HAL, or you recieved pm-utils though your distribution, you
-already have the translated version of the quirks.
-
 pm-utils will no longer query HAL for video quirks.  Instead, it will determine
 what quirks the system requires as in the following order:
 
@@ -16,7 +8,7 @@ what quirks the system requires as in the following order:
    the system.
 
 2: If you are using the nvidia binary driver, pm-utils will not apply any quirks
-  and it will not change virtual terminals.
+  and it will change virtual terminals.
 
 3: If you are using the fglrx driver, pm-utils will not apply any quirks, but
    it will change virtual terminals before suspend.
